@@ -72,7 +72,7 @@ export default function App() {
           {/* 2. Merchant Localhost Console */}
           {activeMode === 'merchant_dashboard' && <MerchantView />}
 
-          {/* 3. System Architecture & Zero-Cloud Blueprint */}
+          {/* 3. System Architecture & Offline-first Blueprint */}
           {activeMode === 'architecture_docs' && <ArchitectureDocs />}
 
           {/* 4. SQLite Database Schema DDL */}
@@ -91,7 +91,7 @@ export default function App() {
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span>
-                <strong>PrintSpool Local v3.4.1</strong> — Localhost Windows Spooler & SQLite Architecture (Zero-Cloud Persistence)
+                <strong>QRPrint v3.4.1</strong> — Localhost Windows Spooler & SQLite Architecture (Offline-first Persistence)
               </span>
             </div>
             <div className="flex items-center gap-4 text-[11px]">

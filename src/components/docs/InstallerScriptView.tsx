@@ -8,14 +8,14 @@ export const InstallerScriptView: React.FC = () => {
   const [isSimulating, setIsSimulating] = useState(false);
   const [simLogs, setSimLogs] = useState<string[]>([]);
 
-  const ONE_LINER_CMD = `irm https://raw.githubusercontent.com/printspool/local-release/main/install.ps1 | iex`;
-  const BATCH_ONE_LINER = `curl -sSL https://raw.githubusercontent.com/printspool/local-release/main/install.bat -o install.bat && install.bat`;
+  const ONE_LINER_CMD = `irm https://raw.githubusercontent.com/qrprint/local-release/main/install.ps1 | iex`;
+  const BATCH_ONE_LINER = `curl -sSL https://raw.githubusercontent.com/qrprint/local-release/main/install.bat -o install.bat && install.bat`;
 
   const POWERSHELL_SCRIPT = `# =====================================================================
-# PrintSpool Local - Automated Windows Host PC Installer
-# GitHub Repository: https://github.com/printspool/local-release
+# QRPrint - Automated Windows Host PC Installer
+# GitHub Repository: https://github.com/qrprint/local-release
 # Requirements: Windows 10/11 or Windows Server 2019+ (PowerShell 5.1+)
-# Execution: irm https://raw.githubusercontent.com/printspool/local-release/main/install.ps1 | iex
+# Execution: irm https://raw.githubusercontent.com/qrprint/local-release/main/install.ps1 | iex
 # =====================================================================
 
 $ErrorActionPreference = "Stop"
@@ -23,7 +23,7 @@ $ErrorActionPreference = "Stop"
 
 function Write-Step {
     param([string]$Message)
-    Write-Host "[PrintSpool] " -NoNewline -ForegroundColor Cyan
+    Write-Host "[QRPrint] " -NoNewline -ForegroundColor Cyan
     Write-Host $Message -ForegroundColor White
 }
 
@@ -35,13 +35,13 @@ function Write-Success {
 
 Clear-Host
 Write-Host "================================================================" -ForegroundColor Cyan
-Write-Host "     PRINTSPOOL LOCAL - WINDOWS HOST PC INSTALLATION WIZARD     " -ForegroundColor Yellow
-Write-Host "     Zero-Cloud Physical Print Store Architecture Engine        " -ForegroundColor White
+Write-Host "     QRPRINT - WINDOWS HOST PC INSTALLATION WIZARD     " -ForegroundColor Yellow
+Write-Host "     Offline-first Physical Print Store Architecture Engine        " -ForegroundColor White
 Write-Host "================================================================" -ForegroundColor Cyan
 Write-Host ""
 
 # 1. Define Directories
-$InstallDir = "$env:LOCALAPPDATA\\PrintSpoolLocal"
+$InstallDir = "$env:LOCALAPPDATA\\QRPrintLocal"
 $BinDir = "$InstallDir\\bin"
 $DataDir = "$InstallDir\\data"
 $TempSpoolDir = "$InstallDir\\temp_spool"
@@ -57,8 +57,8 @@ foreach ($d in $dirs) {
 Write-Success "Directories successfully provisioned."
 
 # 2. Download Core Executable from GitHub Releases
-$ReleaseUrl = "https://raw.githubusercontent.com/printspool/local-release/main/bin/printspool-daemon-win-x64.exe"
-$TargetExe = "$BinDir\\printspool-daemon.exe"
+$ReleaseUrl = "https://raw.githubusercontent.com/qrprint/local-release/main/bin/qrprint-daemon-win-x64.exe"
+$TargetExe = "$BinDir\\qrprint-daemon.exe"
 
 Write-Step "Fetching latest signed release binary from GitHub..."
 try {
@@ -66,14 +66,14 @@ try {
     # Invoke-WebRequest -Uri $ReleaseUrl -OutFile $TargetExe -UseBasicParsing
     # For standalone setup, generate initial executable bootstrap:
     Set-Content -Path $TargetExe -Value "PRINTSPOOL_NATIVE_DAEMON_RUNTIME" -Force
-    Write-Success "Downloaded printspool-daemon.exe (v3.4.1 Win-x64)."
+    Write-Success "Downloaded qrprint-daemon.exe (v3.4.1 Win-x64)."
 } catch {
     Write-Host "[ERROR] Failed to download release from GitHub: $_" -ForegroundColor Red
     Exit 1
 }
 
 # 3. Initialize Embedded SQLite Database
-$DbPath = "$DataDir\\printspool.db"
+$DbPath = "$DataDir\\qrprint.db"
 $SchemaSql = @"
 PRAGMA journal_mode = WAL;
 PRAGMA foreign_keys = ON;
@@ -121,9 +121,9 @@ Write-Success "Configuration written to config.json."
 # 5. Configure Windows Defender Firewall (Allow Port 3000 for LAN clients)
 Write-Step "Configuring Windows Defender Firewall for Local Network access (Port 3000)..."
 try {
-    $existingRule = Get-NetFirewallRule -DisplayName "PrintSpool Local Server" -ErrorAction SilentlyContinue
+    $existingRule = Get-NetFirewallRule -DisplayName "QRPrint Server" -ErrorAction SilentlyContinue
     if (-not $existingRule) {
-        New-NetFirewallRule -DisplayName "PrintSpool Local Server" \`
+        New-NetFirewallRule -DisplayName "QRPrint Server" \`
             -Direction Inbound \`
             -LocalPort 3000 \`
             -Protocol TCP \`
@@ -139,14 +139,14 @@ try {
 }
 
 # 6. Setup Auto-Start Scheduled Task (Runs on PC boot with Highest Privileges)
-Write-Step "Configuring Windows Startup Task 'PrintSpoolLocalDaemon'..."
+Write-Step "Configuring Windows Startup Task 'QRPrintLocalDaemon'..."
 try {
     $TaskAction = New-ScheduledTaskAction -Execute "$TargetExe" -WorkingDirectory "$InstallDir"
     $TaskTrigger = New-ScheduledTaskTrigger -AtLogOn
     $TaskPrincipal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive -RunLevel Highest
     $TaskSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -RestartCount 3
     
-    Register-ScheduledTask -TaskName "PrintSpoolLocalDaemon" -Action $TaskAction -Trigger $TaskTrigger -Principal $TaskPrincipal -Settings $TaskSettings -Force | Out-Null
+    Register-ScheduledTask -TaskName "QRPrintLocalDaemon" -Action $TaskAction -Trigger $TaskTrigger -Principal $TaskPrincipal -Settings $TaskSettings -Force | Out-Null
     Write-Success "Windows Auto-Start task registered."
 } catch {
     Write-Host "[INFO] Standard task registered in startup folder." -ForegroundColor Gray
@@ -167,17 +167,17 @@ Start-Process "http://localhost:3000"
 
   const BATCH_SCRIPT = `@echo off
 :: =====================================================================
-:: PrintSpool Local - Windows Legacy Batch Installer (.bat)
+:: QRPrint - Windows Legacy Batch Installer (.bat)
 :: Compatible with Windows 7 / 8 / 10 / 11 and Windows Server
 :: =====================================================================
-title PrintSpool Local - Installer
+title QRPrint - Installer
 
 echo ================================================================
-echo    PRINTSPOOL LOCAL - WINDOWS HOST PC INSTALLATION (BATCH)      
+echo    QRPRINT - WINDOWS HOST PC INSTALLATION (BATCH)      
 echo ================================================================
 echo.
 
-set INSTALL_DIR=%LOCALAPPDATA%\\PrintSpoolLocal
+set INSTALL_DIR=%LOCALAPPDATA%\\QRPrintLocal
 set BIN_DIR=%INSTALL_DIR%\\bin
 set DATA_DIR=%INSTALL_DIR%\\data
 set TEMP_DIR=%INSTALL_DIR%\\temp_spool
@@ -189,15 +189,15 @@ if not exist "%DATA_DIR%" mkdir "%DATA_DIR%"
 if not exist "%TEMP_DIR%" mkdir "%TEMP_DIR%"
 echo [+] Directories created.
 
-echo [*] Downloading PrintSpool Daemon from GitHub...
-powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; (New-Object System.Net.WebClient).DownloadFile('https://raw.githubusercontent.com/printspool/local-release/main/bin/printspool-daemon-win-x64.exe', '%BIN_DIR%\\printspool-daemon.exe')" 2>nul
-if not exist "%BIN_DIR%\\printspool-daemon.exe" (
-    echo PRINTSPOOL_STANDALONE_BINARY > "%BIN_DIR%\\printspool-daemon.exe"
+echo [*] Downloading QRPrint Daemon from GitHub...
+powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; (New-Object System.Net.WebClient).DownloadFile('https://raw.githubusercontent.com/qrprint/local-release/main/bin/qrprint-daemon-win-x64.exe', '%BIN_DIR%\\qrprint-daemon.exe')" 2>nul
+if not exist "%BIN_DIR%\\qrprint-daemon.exe" (
+    echo PRINTSPOOL_STANDALONE_BINARY > "%BIN_DIR%\\qrprint-daemon.exe"
 )
 echo [+] Executable installed.
 
 echo [*] Opening Windows Firewall Port 3000...
-netsh advfirewall firewall add rule name="PrintSpool Local Server" dir=in action=allow protocol=TCP localport=3000 profile=private >nul 2>&1
+netsh advfirewall firewall add rule name="QRPrint Server" dir=in action=allow protocol=TCP localport=3000 profile=private >nul 2>&1
 echo [+] Firewall configured.
 
 echo.
@@ -239,16 +239,16 @@ exit /b 0
     setSimLogs([]);
 
     const steps = [
-      '[PrintSpool] Initializing installation environment on Windows 11 Host...',
-      '[PrintSpool] Creating isolated directory: C:\\Users\\Operator\\AppData\\Local\\PrintSpoolLocal',
+      '[QRPrint] Initializing installation environment on Windows 11 Host...',
+      '[QRPrint] Creating isolated directory: C:\\Users\\Operator\\AppData\\Local\\QRPrintLocal',
       '[SUCCESS] Directories created (bin, data, temp_spool, logs).',
-      '[PrintSpool] Fetching signed binary from GitHub release (v3.4.1)...',
-      '[SUCCESS] Downloaded printspool-daemon.exe (SHA-256 verified).',
-      '[PrintSpool] Initializing embedded SQLite 3 database with WAL journal mode...',
+      '[QRPrint] Fetching signed binary from GitHub release (v3.4.1)...',
+      '[SUCCESS] Downloaded qrprint-daemon.exe (SHA-256 verified).',
+      '[QRPrint] Initializing embedded SQLite 3 database with WAL journal mode...',
       '[SUCCESS] SQLite database initialized (tables: print_jobs, job_files, shred_logs).',
-      '[PrintSpool] Opening Windows Defender Firewall TCP port 3000...',
-      '[SUCCESS] Firewall inbound rule "PrintSpool Local Server" applied.',
-      '[PrintSpool] Registering Scheduled Task "PrintSpoolLocalDaemon" for auto-boot...',
+      '[QRPrint] Opening Windows Defender Firewall TCP port 3000...',
+      '[SUCCESS] Firewall inbound rule "QRPrint Server" applied.',
+      '[QRPrint] Registering Scheduled Task "QRPrintLocalDaemon" for auto-boot...',
       '[SUCCESS] Auto-start daemon registered with highest privileges.',
       '================================================================',
       '[SUCCESS] INSTALLATION COMPLETE! Starting local server on http://localhost:3000',
@@ -413,7 +413,7 @@ exit /b 0
             <span>1. Directory Provisioning</span>
           </div>
           <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal">
-            Creates standard isolated folders in <code className="bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded text-[10px]">%LocalAppData%\PrintSpoolLocal</code> for data, binaries, and ephemeral temp spool buffers.
+            Creates standard isolated folders in <code className="bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded text-[10px]">%LocalAppData%\QRPrintLocal</code> for data, binaries, and ephemeral temp spool buffers.
           </p>
         </div>
 
