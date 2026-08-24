@@ -1,1 +1,36 @@
-{"name":"qrprint-merchant","version":"0.1.0","type":"module","bin":{"qrprint-merchant":"dist/cli.js"},"scripts":{"dev":"tsx src/server/index.ts","build":"tsc -p tsconfig.json","start":"node dist/server/index.js","lint":"tsc --noEmit"},"dependencies":{"@qrprint/shared-types":"workspace:*","better-sqlite3":"^11.10.0","cors":"^2.8.5","dotenv":"^17.2.3","electron":"^37.2.0","express":"^4.21.2","multer":"^2.0.2","pdf-to-printer":"^5.6.0","qrcode":"^1.5.4","socket.io":"^4.8.1","uuid":"^11.1.0"},"devDependencies":{"@types/cors":"^2.8.17","@types/express":"^4.17.21","@types/multer":"^2.0.0","@types/node":"^22.14.0","@types/qrcode":"^1.5.5","tsx":"^4.21.0","typescript":"~5.8.2"}}
+{
+  "name": "qrprint-merchant",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "qrprint-merchant": "dist/cli.js"
+  },
+  "scripts": {
+    "dev": "tsx src/server/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server/index.js",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@qrprint/shared-types": "file:../shared-types",
+    "better-sqlite3": "^11.10.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "electron": "^37.2.0",
+    "express": "^4.21.2",
+    "multer": "^2.0.2",
+    "pdf-to-printer": "^5.6.0",
+    "qrcode": "^1.5.4",
+    "socket.io": "^4.8.1",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^22.14.0",
+    "@types/qrcode": "^1.5.5",
+    "tsx": "^4.21.0",
+    "typescript": "~5.8.2"
+  }
+}
