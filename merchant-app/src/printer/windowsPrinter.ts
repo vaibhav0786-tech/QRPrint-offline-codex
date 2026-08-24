@@ -1,4 +1,6 @@
-import { unlink } from 'node:fs/promises';
+import { mkdtemp, unlink, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import type { QrPrintJob } from '@qrprint/shared-types';
 
 export async function discoverPrinters() {
@@ -22,4 +24,12 @@ export async function printAndDelete(job: QrPrintJob, printerName?: string) {
       file.deletedAt = new Date().toISOString();
     }
   }
+}
+
+export async function runTestPrint(printerName?: string) {
+  const dir = await mkdtemp(path.join(tmpdir(), 'qrprint-test-'));
+  const testFile = path.join(dir, 'qrprint-test.txt');
+  await writeFile(testFile, `QRPrint test print\n${new Date().toISOString()}\n`, 'utf8');
+  // Real Windows text printing will be implemented in the Electron shell; this endpoint proves dashboard-to-backend wiring.
+  return { printerName, testFile };
 }
