@@ -1,109 +1,65 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
+import React, { useMemo, useState } from 'react';
+import { PrintJobProvider, usePrintJob } from './context/PrintJobContext';
+import { CustomerDetails, PaymentMethod, PrintPreferences, UploadedDocument } from './types';
+import { Menu, QrCode, Search, Store, Upload, Settings, Printer, Users, Database, ShieldCheck, SunMoon } from 'lucide-react';
 
-import React, { useState } from 'react';
-import { PrintJobProvider } from './context/PrintJobContext';
-import { Header, ActiveAppMode } from './components/common/Header';
-import { CustomerView } from './components/customer/CustomerView';
-import { MerchantView } from './components/merchant/MerchantView';
-import { ArchitectureDocs } from './components/docs/ArchitectureDocs';
-import { DatabaseSchemaView } from './components/docs/DatabaseSchemaView';
-import { ApiSpecView } from './components/docs/ApiSpecView';
-import { InstallerScriptView } from './components/docs/InstallerScriptView';
-import { Smartphone, Wifi, Battery, Volume2, ShieldCheck } from 'lucide-react';
-
-export default function App() {
-  const [activeMode, setActiveMode] = useState<ActiveAppMode>('customer_mobile');
-  const [isMobileFrame, setIsMobileFrame] = useState(false);
-
-  return (
-    <PrintJobProvider>
-      <div className="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans antialiased selection:bg-indigo-500 selection:text-white">
-        
-        {/* Global Navigation Header */}
-        <Header
-          activeMode={activeMode}
-          onModeChange={setActiveMode}
-          isMobileFrame={isMobileFrame}
-          onToggleMobileFrame={() => setIsMobileFrame(prev => !prev)}
-        />
-
-        {/* Main View Area */}
-        <main className="flex-1 pb-16">
-          
-          {/* 1. Customer Mobile View */}
-          {activeMode === 'customer_mobile' && (
-            <div className="w-full">
-              {isMobileFrame ? (
-                /* Simulated Mobile Device Frame */
-                <div className="py-8 px-4 flex justify-center items-center">
-                  <div className="w-[390px] min-h-[780px] bg-white dark:bg-slate-900 rounded-[48px] border-[10px] border-slate-900 shadow-2xl overflow-hidden relative flex flex-col ring-1 ring-slate-800/10">
-                    
-                    {/* Phone Notch / Dynamic Island & Status Bar */}
-                    <div className="h-10 bg-slate-900 text-white flex items-center justify-between px-6 text-[11px] font-semibold shrink-0 select-none z-30">
-                      <span>9:41</span>
-                      <div className="w-20 h-4 bg-black rounded-full mx-auto"></div>
-                      <div className="flex items-center gap-1.5 text-[10px]">
-                        <Wifi className="w-3 h-3" />
-                        <Battery className="w-3.5 h-3.5" />
-                      </div>
-                    </div>
-
-                    {/* Scrollable Mobile Screen */}
-                    <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
-                      <CustomerView />
-                    </div>
-
-                    {/* Home Bar */}
-                    <div className="h-5 bg-white dark:bg-slate-900 flex items-center justify-center shrink-0 z-30">
-                      <div className="w-32 h-1 bg-slate-400 dark:bg-slate-600 rounded-full"></div>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                /* Full-width Responsive Customer View */
-                <CustomerView />
-              )}
-            </div>
-          )}
-
-          {/* 2. Merchant Localhost Console */}
-          {activeMode === 'merchant_dashboard' && <MerchantView />}
-
-          {/* 3. System Architecture & Zero-Cloud Blueprint */}
-          {activeMode === 'architecture_docs' && <ArchitectureDocs />}
-
-          {/* 4. SQLite Database Schema DDL */}
-          {activeMode === 'database_schema' && <DatabaseSchemaView />}
-
-          {/* 5. REST API Spec */}
-          {activeMode === 'api_spec' && <ApiSpecView />}
-
-          {/* 6. Windows PowerShell / Batch Installer */}
-          {activeMode === 'installer_scripts' && <InstallerScriptView />}
-        </main>
-
-        {/* Global Footer */}
-        <footer className="border-t border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xs py-4 px-6 text-xs text-slate-500 dark:text-slate-400">
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span>
-                <strong>PrintSpool Local v3.4.1</strong> — Localhost Windows Spooler & SQLite Architecture (Zero-Cloud Persistence)
-              </span>
-            </div>
-            <div className="flex items-center gap-4 text-[11px]">
-              <span>Port: <code>3000</code></span>
-              <span>•</span>
-              <span>Sanitization: <code>DoD 5220.22-M</code></span>
-              <span>•</span>
-              <span>Engine: <code>SQLite WAL</code></span>
-            </div>
-          </div>
-        </footer>
-      </div>
-    </PrintJobProvider>
-  );
+function fakeQr(url: string) {
+  return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}`;
 }
+
+function Shell() {
+  const [view, setView] = useState<'merchant' | 'customer' | 'docs'>('merchant');
+  const { settings } = usePrintJob();
+  return <div className="min-h-screen bg-slate-100 text-slate-950 dark:bg-slate-950 dark:text-slate-100" style={{ ['--accent' as string]: settings.accentColor }}>
+    <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-900/90">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3">
+        <button className="flex items-center gap-2 rounded-xl bg-[var(--accent)] px-3 py-2 font-black text-white" onClick={() => setView('merchant')}><Printer size={18}/> QRPrint Offline</button>
+        <nav className="flex gap-2 text-sm font-bold">
+          <button onClick={() => setView('merchant')} className="rounded-lg px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800">🏪 Merchant</button>
+          <button onClick={() => setView('customer')} className="rounded-lg px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800">📱 Customer</button>
+          <button onClick={() => setView('docs')} className="rounded-lg px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800">📚 Deployment</button>
+        </nav>
+      </div>
+    </header>
+    {view === 'merchant' && <MerchantDashboard />}
+    {view === 'customer' && <CustomerPortal />}
+    {view === 'docs' && <Docs />}
+  </div>;
+}
+
+function MerchantDashboard() {
+  const { profile, settings, jobs, logs, qrUrl, updateSettings, updateJobStatus } = usePrintJob();
+  const [collapsed, setCollapsed] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const filtered = jobs.filter(j => `${j.id} ${j.customer.name} ${j.customer.mobile} ${j.status}`.toLowerCase().includes(query.toLowerCase()));
+  return <main className="mx-auto grid max-w-7xl gap-4 p-4 lg:grid-cols-[auto_1fr]">
+    <aside className={`${collapsed ? 'w-16' : 'w-64'} rounded-3xl border border-slate-200 bg-white p-3 shadow-sm transition-all dark:border-slate-800 dark:bg-slate-900`}>
+      <button onClick={() => setCollapsed(!collapsed)} className="mb-3 flex w-full items-center gap-2 rounded-2xl bg-slate-100 p-3 font-bold dark:bg-slate-800"><Menu/> {!collapsed && 'Modules'}</button>
+      {[[Store,'Dashboard'],[Printer,'Print Queue'],[Settings,'Settings'],[Users,'Staff'],[Database,'Logs'],[ShieldCheck,'Security']].map(([Icon,label]: any) => <div key={label} className="mb-2 flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800"><Icon size={18}/>{!collapsed && label}</div>)}
+    </aside>
+    <section className="space-y-4">
+      <div className="rounded-3xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 p-5 text-white shadow-xl">
+        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
+          <div><p className="text-sm font-bold opacity-80">🟢 Local access: http://127.0.0.1:{profile.port}</p><h1 className="text-3xl font-black">{profile.shopName} command center</h1><p>Owner: {profile.ownerName} • Staff: {profile.staffNames.join(', ')} • Default printer: {profile.defaultPrinter}</p></div>
+          <button onClick={() => setQrOpen(!qrOpen)} className="rounded-2xl bg-white/15 p-3 text-center font-bold backdrop-blur"><QrCode className="mx-auto"/> Store QR</button>
+        </div>
+        {qrOpen && <div className="mt-4 inline-block rounded-3xl bg-white p-4 text-slate-900"><img src={fakeQr(qrUrl)} alt="Store QR"/><p className="mt-2 text-center font-mono text-xs">{qrUrl}</p></div>}
+      </div>
+      <div className="flex flex-col gap-3 rounded-3xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 md:flex-row">
+        <label className="flex flex-1 items-center gap-2 rounded-2xl bg-slate-100 px-3 dark:bg-slate-800"><Search size={18}/><input className="w-full bg-transparent py-3 outline-none" placeholder="Search jobs, customer, settings..." value={query} onChange={e=>setQuery(e.target.value)}/></label>
+        <select value={settings.theme} onChange={e=>updateSettings({...settings, theme:e.target.value as any})} className="rounded-2xl border p-3 dark:border-slate-700 dark:bg-slate-800"><option value="auto">🌓 Auto theme</option><option value="light">☀️ Light</option><option value="dark">🌙 Dark</option></select>
+        <input aria-label="Accent color" type="color" value={settings.accentColor} onChange={e=>updateSettings({...settings, accentColor:e.target.value})} className="h-12 w-16 rounded-xl"/>
+      </div>
+      <div className="grid gap-4 lg:grid-cols-3"><SettingsPanel/><Queue jobs={filtered} onStatus={updateJobStatus}/><div className="rounded-3xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"><h2 className="font-black">🧾 Audit & logging</h2>{logs.slice(0,8).map(l=><p className="mt-2 text-xs" key={l.id}><b>{l.level}</b> {new Date(l.timestamp).toLocaleTimeString()} — {l.message}</p>)}</div></div>
+    </section>
+  </main>;
+}
+
+function SettingsPanel(){ const {settings, updateSettings}=usePrintJob(); return <div className="rounded-3xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"><h2 className="font-black">⚙️ Operations</h2><label className="mt-3 block text-sm">Paper sizes<input className="mt-1 w-full rounded-xl border p-2 dark:border-slate-700 dark:bg-slate-800" value={settings.paperSizes.join(', ')} onChange={e=>updateSettings({...settings,paperSizes:e.target.value.split(',').map(x=>x.trim()).filter(Boolean)})}/></label><label className="mt-3 block text-sm">B/W price<input type="number" className="mt-1 w-full rounded-xl border p-2 dark:border-slate-700 dark:bg-slate-800" value={settings.bwPricePerPage} onChange={e=>updateSettings({...settings,bwPricePerPage:+e.target.value})}/></label><label className="mt-3 block text-sm">Color price<input type="number" className="mt-1 w-full rounded-xl border p-2 dark:border-slate-700 dark:bg-slate-800" value={settings.colorPricePerPage} onChange={e=>updateSettings({...settings,colorPricePerPage:+e.target.value})}/></label><label className="mt-3 flex gap-2 text-sm"><input type="checkbox" checked={settings.enableAutoPrint} onChange={e=>updateSettings({...settings,enableAutoPrint:e.target.checked})}/> Auto-spool paid jobs</label></div> }
+function Queue({jobs,onStatus}: {jobs:any[]; onStatus:(id:string,s:any)=>void}){return <div className="rounded-3xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"><h2 className="font-black">🚦 Real-time queue</h2>{jobs.map(j=><div key={j.id} className="mt-3 rounded-2xl bg-slate-50 p-3 dark:bg-slate-800"><div className="flex justify-between"><b>{j.id} — {j.customer.name}</b><span className="rounded-full bg-[var(--accent)] px-2 py-1 text-xs font-bold text-white">{j.status}</span></div><p className="text-xs">{j.files.length} file(s), {j.preferences.copies} copies, {j.preferences.colorMode}, front page: {j.preferences.addFrontPage?'yes':'no'}</p><div className="mt-2 flex gap-2"><button onClick={()=>onStatus(j.id,'printing')} className="rounded-lg bg-indigo-600 px-2 py-1 text-xs font-bold text-white">Print</button><button onClick={()=>onStatus(j.id,'ready')} className="rounded-lg bg-emerald-600 px-2 py-1 text-xs font-bold text-white">Ready</button><button onClick={()=>onStatus(j.id,'failed')} className="rounded-lg bg-red-600 px-2 py-1 text-xs font-bold text-white">Fail</button></div></div>)}</div>}
+
+function CustomerPortal(){ const {profile,settings,addJob}=usePrintJob(); const [step,setStep]=useState(1); const [files,setFiles]=useState<UploadedDocument[]>([]); const [prefs,setPrefs]=useState<PrintPreferences>({colorMode:'bw',copies:settings.defaultCopies,paperSize:settings.paperSizes[0]||'A4',duplex:false,addFrontPage:profile.addFrontPage,notes:''}); const [customer,setCustomer]=useState<CustomerDetails>({name:'',mobile:'',email:''}); const [payment,setPayment]=useState<PaymentMethod>('cash'); const price=useMemo(()=>files.reduce((a,f)=>a+f.pages,0)*prefs.copies*(prefs.colorMode==='color'?settings.colorPricePerPage:settings.bwPricePerPage),[files,prefs,settings]); const submit=()=>{addJob({customer,files,preferences:prefs,payment:{method:payment,status:payment==='cash'?'pending':'paid',amount:price,reference:payment==='upi'?'UPI-SIMULATED':''}}); setStep(7)}; return <main className="mx-auto max-w-3xl p-4"><div className="rounded-3xl bg-white p-5 shadow dark:bg-slate-900"><h1 className="text-3xl font-black">📱 Print at {profile.shopName}</h1><p className="text-sm text-slate-500">Upload → preview → preferences → details → payment → thank you.</p>{step===1&&<section className="mt-4"><label className="flex cursor-pointer flex-col items-center rounded-3xl border-2 border-dashed p-8"><Upload size={42}/><b>Upload documents</b><input type="file" multiple className="hidden" onChange={e=>{const docs=Array.from(e.target.files ?? [] as File[]).map((f: File)=>({id:crypto.randomUUID(),name:f.name,sizeBytes:f.size,type:f.type,pages:Math.max(1,Math.ceil(f.size/250000)),previewUrl:f.type.startsWith('image/')?URL.createObjectURL(f):undefined})); setFiles(docs); setStep(2)}}/></label></section>}{step===2&&<section className="mt-4"><h2 className="font-black">👀 Preview</h2>{files.map(f=><div className="mt-2 rounded-2xl bg-slate-100 p-3 dark:bg-slate-800" key={f.id}>{f.previewUrl?<img src={f.previewUrl} className="max-h-56 rounded-xl"/>:<span>📄 {f.name}</span>}<p className="text-xs">Estimated {f.pages} page(s)</p></div>)}<button className="mt-4 rounded-xl bg-[var(--accent)] px-4 py-2 font-bold text-white" onClick={()=>setStep(3)}>Configure</button></section>}{step===3&&<section className="mt-4 grid gap-3"><select value={prefs.colorMode} onChange={e=>setPrefs({...prefs,colorMode:e.target.value as any})} className="rounded-xl border p-3 dark:bg-slate-800"><option value="bw">⚫ Black & white</option><option value="color">🌈 Color</option></select><input type="number" min="1" value={prefs.copies} onChange={e=>setPrefs({...prefs,copies:+e.target.value})} className="rounded-xl border p-3 dark:bg-slate-800"/><select value={prefs.paperSize} onChange={e=>setPrefs({...prefs,paperSize:e.target.value})} className="rounded-xl border p-3 dark:bg-slate-800">{settings.paperSizes.map(s=><option key={s}>{s}</option>)}</select><label><input type="checkbox" checked={prefs.addFrontPage} onChange={e=>setPrefs({...prefs,addFrontPage:e.target.checked})}/> 🧾 Add front page with my name/details</label><button onClick={()=>setStep(4)} className="rounded-xl bg-[var(--accent)] px-4 py-2 font-bold text-white">Confirm ₹{price}</button></section>}{step===4&&<section className="mt-4 grid gap-3"><input placeholder="Name" value={customer.name} onChange={e=>setCustomer({...customer,name:e.target.value})} className="rounded-xl border p-3 dark:bg-slate-800"/><input placeholder="Mobile" value={customer.mobile} onChange={e=>setCustomer({...customer,mobile:e.target.value})} className="rounded-xl border p-3 dark:bg-slate-800"/><input placeholder="Email optional" value={customer.email} onChange={e=>setCustomer({...customer,email:e.target.value})} className="rounded-xl border p-3 dark:bg-slate-800"/><button onClick={()=>setStep(5)} className="rounded-xl bg-[var(--accent)] px-4 py-2 font-bold text-white">Review</button></section>}{step===5&&<section className="mt-4"><h2 className="font-black">✅ Final review</h2><p>{customer.name}, {customer.mobile}</p><p>{files.length} files • {prefs.copies} copies • ₹{price}</p><button onClick={()=>setStep(6)} className="mt-3 rounded-xl bg-[var(--accent)] px-4 py-2 font-bold text-white">Payment</button></section>}{step===6&&<section className="mt-4"><h2 className="font-black">💳 Payment</h2><label><input type="radio" checked={payment==='cash'} onChange={()=>setPayment('cash')}/> Cash at counter</label><br/><label><input type="radio" checked={payment==='upi'} onChange={()=>setPayment('upi')}/> UPI to {settings.upiId}</label><br/><button onClick={submit} className="mt-3 rounded-xl bg-emerald-600 px-4 py-2 font-bold text-white">Mark payment complete</button><button onClick={()=>setStep(6)} className="ml-2 rounded-xl bg-amber-500 px-4 py-2 font-bold text-white">Retry failed payment</button></section>}{step===7&&<section className="mt-4 rounded-3xl bg-emerald-50 p-5 dark:bg-emerald-950"><h2 className="text-2xl font-black">🎉 Thank you!</h2><p>Your job is queued. Contact {profile.mobile} or visit {profile.address}.</p></section>}</div></main> }
+function Docs(){return <main className="mx-auto max-w-5xl space-y-4 p-4"><div className="rounded-3xl bg-white p-6 dark:bg-slate-900"><h1 className="text-3xl font-black">📚 Production deployment blueprint</h1><p>Use <code>install-windows.bat</code> or <code>install-linux.sh</code> after cloning. The wizard writes merchant profile JSON, installs npm dependencies, builds the app, and prints <code>http://127.0.0.1:[port]</code>.</p><h2 className="mt-4 font-black">API endpoints</h2><pre className="overflow-auto rounded-2xl bg-slate-950 p-4 text-xs text-emerald-300">GET /api/health\nGET/PUT /api/merchant-profile\nGET/PUT /api/settings\nGET/POST /api/jobs\nPATCH /api/jobs/:id/status\nGET /api/logs</pre><h2 className="mt-4 font-black">Security</h2><ul className="list-disc pl-5"><li>Localhost binding by default.</li><li>File metadata shown to merchant; direct file browsing is avoided.</li><li>Input validation, audit logs, and future CSRF/session hardening points documented.</li></ul></div></main>}
+
+export default function App(){return <PrintJobProvider><Shell/></PrintJobProvider>}
