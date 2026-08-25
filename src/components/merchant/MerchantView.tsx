@@ -140,6 +140,9 @@ export const MerchantView: React.FC = () => {
           <p className="text-xs text-slate-500 dark:text-slate-400">
             Direct Windows Spooler controller & offline SQLite database management
           </p>
+          <div className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-indigo-50 px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-wide text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+            Shop routing ID: {merchantSettings.shopId} · Polling every 10 seconds
+          </div>
         </div>
 
         {/* Quick stats chips & Shredder Alert indicator */}
