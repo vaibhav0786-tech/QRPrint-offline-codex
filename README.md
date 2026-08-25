@@ -1,72 +1,88 @@
 # PrintSpool Local
 
-PrintSpool Local is a single source repository with two intentionally separate deployment targets:
+> **Document ID:** PSD-README · **Version:** 1.0.0 · **Status:** Active · **Last updated:** 2026-08-25 · **Owner:** Engineering
 
-| Surface | Audience | Deployment |
-| --- | --- | --- |
-| **Customer portal** | Customers scanning a shop QR code | Vercel static/Vite deployment |
-| **Merchant console** | Staff operating one physical shop | Localhost only (`127.0.0.1`) |
+PrintSpool Local is a two-surface print-ordering product:
+
+- **Customer portal:** a responsive Vite/React web app intended for Vercel deployment.
+- **Merchant console:** a local-only dashboard for receiving orders, managing the queue and printers, and operating a physical print shop.
+
+The repository currently provides the front-end reference implementation, merchant queue simulation, local access gate, and the SDLC/documentation baseline. A production order API and local daemon are integration dependencies described in the design documents; they are not included in this repository.
 
 ## Quick start
 
+### Prerequisites
+
+- Node.js **20 LTS or later**
+- npm **10 or later**
+- A modern Chromium-, Firefox-, or Safari-based browser
+
 ```sh
-npm install
-npm run dev                 # customer portal on http://localhost:3000
-./scripts/start-merchant.sh # merchant console, bound to 127.0.0.1
+git clone <repository-url>
+cd QRPrint-offline-codex
+npm ci
+cp .env.example .env.local
+npm run dev
 ```
 
-Copy `.env.example` to `.env.local`. For the customer build set `VITE_ORDER_API_URL` to the public order API. For the merchant installation set `VITE_APP_SURFACE=merchant`, `VITE_LOCAL_DAEMON_URL`, and a private `SHOP_ID` in the daemon environment. Do not put a daemon token in a `VITE_` variable.
+Open `http://localhost:3000`. The normal development entry point opens the customer portal.
 
-## Vercel customer deployment
+### Merchant console (localhost only)
 
-1. Import this repository into Vercel and use the project root as the Root Directory.
-2. Vercel detects Vite. Use `npm run build` and `dist` (the included `vercel.json` also configures SPA fallback).
-3. Add `VITE_ORDER_API_URL=https://api.your-domain.example/v1` under Production environment variables.
-4. Deploy. Give each shop a QR URL such as `https://print.example/s/metroprint-downtown`; the page passes that shop ID in its order payload.
-
-The customer bundle contains no merchant credential and must never contact a raw LAN printer.
-
-## Local merchant installation
-
-1. Install Node 20+ and the printer driver on the shop PC.
-2. Clone the repository, run `npm ci`, then create `.env.local` with `VITE_APP_SURFACE=merchant`.
-3. Start the local daemon (your production service) on `127.0.0.1:8787`, configured with its `SHOP_ID`, `DAEMON_TOKEN`, polling interval, and the target **IPP network printer** URI.
-4. Run `./scripts/start-merchant.sh` and unlock the dashboard with the local Shop ID. The browser session unlock is a UI gate; production authorization belongs in the loopback daemon.
-
-### Printer method
-
-This implementation is designed for **IPP** (`ipp://printer.lan/ipp/print` or `ipps://…`) because it supports network discovery, job IDs, and status polling. The daemon should submit the validated PDF to IPP after it claims the job, record the returned printer job ID, and report `failed` with a retryable reason if IPP rejects it. USB support should be added inside the daemon, not the customer web app.
-
-## Order routing contract
-
-The public API persists a small order envelope and associates it with a Shop ID. The local daemon pulls only its own work; Vercel never makes a direct request to a customer’s localhost.
-
-```http
-POST /v1/orders
-Authorization: Bearer <customer-payment-session>
-Content-Type: application/json
-
-{
-  "shopId": "metroprint-downtown",
-  "idempotencyKey": "uuid-v4",
-  "customer": { "name": "Ari", "phone": "+15551234567", "notifyVia": "sms" },
-  "files": [{ "uploadUrl": "https://…", "sha256": "…", "pages": 4 }],
-  "preferences": { "colorMode": "bw", "paperSize": "A4", "copies": 1 }
-}
+```sh
+./scripts/start-merchant.sh
 ```
 
-Response: `202 { "orderId": "ord_…", "status": "queued_remote" }`. The daemon then polls `GET /v1/merchant/orders?shopId=metroprint-downtown` with `Authorization: Bearer <daemon-token>`, claims with `POST /v1/merchant/orders/:id/claim`, prints via IPP, and updates `POST /v1/merchant/orders/:id/status`. Both creation and status updates use idempotency keys.
+The script sets `VITE_APP_SURFACE=merchant` and binds Vite to `127.0.0.1`. Open `http://127.0.0.1:3000`, enter the configured shop ID (`metroprint-downtown` in the demo data), and continue to the local dashboard. The UI gate is a usability safeguard; a production daemon must enforce authentication independently.
 
-### Offline and failure behavior
+## Configuration
 
-* A shop without a daemon remains `queued_remote`; customer tracking must show “shop connection pending,” not “printing.”
-* Claim leases expire so a crashed daemon cannot permanently lock an order. The daemon retries temporary network/IPP failures with exponential backoff and surfaces them in the local queue.
-* Never automatically charge twice: payment capture and order creation must share the same idempotency key.
-* Keep document download URLs short-lived, encrypted, and delete local spool files after a confirmed print according to the operator’s retention policy.
+Create `.env.local` from `.env.example`. Variables prefixed with `VITE_` are compiled into browser code, so they **must not contain secrets**.
 
-## Security checklist
+| Variable | Used by | Required | Purpose |
+| --- | --- | --- | --- |
+| `VITE_APP_SURFACE` | React app | No | `customer` (default) or `merchant`. |
+| `VITE_ORDER_API_URL` | Customer build | Production | Public order API base URL. |
+| `VITE_LOCAL_DAEMON_URL` | Merchant build | Production | Loopback daemon base URL, for example `http://127.0.0.1:8787`. |
+| `SHOP_ID` | Local daemon only | Production | Per-shop routing key; never rely on it as a secret. |
+| `DAEMON_TOKEN` | Local daemon only | Production | Private credential used by the daemon to claim and update orders. Do not prefix with `VITE_`. |
 
-* Bind the merchant web app and daemon to `127.0.0.1`; firewall their ports and use a distinct OS account.
-* Do **not** expose localhost with an unauthenticated tunnel. If remote support is needed, use an authenticated, TLS tunnel with device identity, IP allowlisting, audit logs, and short expiry.
-* Treat `shopId` as a routing label, not authentication. Authenticate daemon calls with rotating per-shop tokens or mTLS and authorize every resource by shop ID server-side.
-* Verify uploaded file type, size, hash, virus scan result, payment state, and IPP destination before printing. Apply rate limits and CORS allowlists to the public API.
+## Commands
+
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Start customer-oriented Vite development server. |
+| `./scripts/start-merchant.sh` | Start merchant-oriented server on loopback only. |
+| `npm run lint` | Run TypeScript checking without emitting files. |
+| `npm run build` | Create the production customer bundle in `dist/`. |
+| `npm run preview` | Serve the built bundle locally. |
+
+## Deployment overview
+
+Deploy the customer surface to Vercel with build command `npm run build` and output directory `dist`. Set `VITE_ORDER_API_URL` in Vercel Production environment variables. The included `vercel.json` supplies SPA fallback. Do not deploy the merchant mode to Vercel.
+
+Install the merchant console and daemon on a shop-owned PC. Bind both to loopback, configure the daemon with a per-shop token and an IPP/IPPS printer URI, and run it under a least-privilege OS account. Full instructions and operational procedures are in [Deployment and Maintenance Plan](docs/06-deployment-maintenance-plan.md).
+
+## Documentation map
+
+| Document | Purpose |
+| --- | --- |
+| [Project Proposal and Feasibility Study](docs/01-project-proposal-feasibility.md) | Scope, objectives, feasibility, stakeholders, and risks. |
+| [Requirements Specification](docs/02-requirements-specification.md) | Requirements, use cases, and acceptance criteria. |
+| [System Design](docs/03-system-design.md) | Architecture, schemas, API contracts, and components. |
+| [Development and Coding Standards](docs/04-development-coding-standards.md) | Engineering, security, review, and Git rules. |
+| [Test Plan and Test Cases](docs/05-test-plan-test-cases.md) | Test strategy, cases, traceability, and exit criteria. |
+| [Deployment and Maintenance Plan](docs/06-deployment-maintenance-plan.md) | Release, rollback, operations, support, and monitoring. |
+| [Project Context](context.md) | Current-state briefing, assumptions, constraints, and onboarding index. |
+
+## Contributing
+
+1. Create a focused branch from the current integration branch.
+2. Keep changes aligned with [coding standards](docs/04-development-coding-standards.md).
+3. Update relevant requirements, design, tests, and this README when behavior changes.
+4. Run `npm run lint`, `npm run build`, and `git diff --check` before opening a pull request.
+5. Use conventional commit messages, request review, and do not commit credentials, customer data, or generated `dist/` assets.
+
+## License and support
+
+See the repository license if supplied. Report security concerns privately to the project owner; do not include exploit details in public issues.
