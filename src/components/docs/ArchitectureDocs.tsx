@@ -13,7 +13,7 @@ export const ArchitectureDocs: React.FC = () => {
           </div>
           <div>
             <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-              System Architecture & Zero-Cloud Blueprint
+              System Architecture & Offline-first Blueprint
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
               End-to-end topological layout of customer web upload, local socket relay, SQLite storage, and hardware spooling
@@ -22,7 +22,7 @@ export const ArchitectureDocs: React.FC = () => {
         </div>
 
         <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-          The <strong>PrintSpool Local</strong> system is engineered specifically for privacy-sensitive print shops, universities, copy centers, and commercial hubs. Unlike legacy SaaS print platforms that mirror confidential customer documents onto multitenant cloud object stores (S3/GCS), PrintSpool Local executes a <strong>Zero-Cloud Persistence Architecture</strong>.
+          The <strong>QRPrint</strong> system is engineered specifically for privacy-sensitive print shops, universities, copy centers, and commercial hubs. Unlike legacy SaaS print platforms that mirror confidential customer documents onto multitenant cloud object stores (S3/GCS), QRPrint executes a <strong>Offline-first Persistence Architecture</strong>.
         </p>
 
         {/* Visual Pipeline Flow */}
@@ -34,7 +34,7 @@ export const ArchitectureDocs: React.FC = () => {
             </div>
             <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">Customer Mobile Portal</h4>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">
-              Static client hosted on GitHub Pages (<code className="text-indigo-500">*.github.io</code>). Scans in-store QR code, configures preferences, and handles payment gateway tokens.
+              Static client hosted on Vercel (<code className="text-indigo-500">*.vercel.app</code>). Scans in-store QR code, configures preferences, and handles payment gateway tokens.
             </p>
           </div>
 
@@ -82,7 +82,7 @@ export const ArchitectureDocs: React.FC = () => {
             <thead>
               <tr className="border-b border-slate-200 dark:border-slate-700 text-slate-400 uppercase text-[10px] tracking-wider">
                 <th className="py-3 px-3">Architectural Parameter</th>
-                <th className="py-3 px-3 text-indigo-600 dark:text-indigo-400 font-bold">PrintSpool Local (This System)</th>
+                <th className="py-3 px-3 text-indigo-600 dark:text-indigo-400 font-bold">QRPrint (This System)</th>
                 <th className="py-3 px-3 text-slate-500">Traditional Cloud SaaS Print Service</th>
               </tr>
             </thead>
