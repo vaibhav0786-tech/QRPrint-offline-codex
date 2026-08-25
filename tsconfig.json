@@ -22,5 +22,12 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  "include": [
+    "src/App.tsx",
+    "src/main.tsx",
+    "src/context/PrintJobContext.tsx",
+    "src/data/defaults.ts",
+    "src/types.ts"
+  ]
 }
