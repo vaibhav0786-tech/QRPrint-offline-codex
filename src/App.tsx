@@ -8,6 +8,7 @@ import { PrintJobProvider } from './context/PrintJobContext';
 import { Header, ActiveAppMode } from './components/common/Header';
 import { CustomerView } from './components/customer/CustomerView';
 import { MerchantView } from './components/merchant/MerchantView';
+import { MerchantAccessGate } from './components/merchant/MerchantAccessGate';
 import { ArchitectureDocs } from './components/docs/ArchitectureDocs';
 import { DatabaseSchemaView } from './components/docs/DatabaseSchemaView';
 import { ApiSpecView } from './components/docs/ApiSpecView';
@@ -15,8 +16,10 @@ import { InstallerScriptView } from './components/docs/InstallerScriptView';
 import { Smartphone, Wifi, Battery, Volume2, ShieldCheck } from 'lucide-react';
 
 export default function App() {
-  const [activeMode, setActiveMode] = useState<ActiveAppMode>('customer_mobile');
+  const merchantOnly = import.meta.env.VITE_APP_SURFACE === 'merchant';
+  const [activeMode, setActiveMode] = useState<ActiveAppMode>(merchantOnly ? 'merchant_dashboard' : 'customer_mobile');
   const [isMobileFrame, setIsMobileFrame] = useState(false);
+  const [merchantAuthenticated, setMerchantAuthenticated] = useState(() => sessionStorage.getItem('printspool-local-unlocked') === 'true');
 
   return (
     <PrintJobProvider>
@@ -70,7 +73,7 @@ export default function App() {
           )}
 
           {/* 2. Merchant Localhost Console */}
-          {activeMode === 'merchant_dashboard' && <MerchantView />}
+          {activeMode === 'merchant_dashboard' && (merchantAuthenticated ? <MerchantView /> : <MerchantAccessGate onAuthenticated={() => setMerchantAuthenticated(true)} />)}
 
           {/* 3. System Architecture & Zero-Cloud Blueprint */}
           {activeMode === 'architecture_docs' && <ArchitectureDocs />}

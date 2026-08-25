@@ -30,6 +30,7 @@ export const DEFAULT_PRICING: PricingSettings = {
 };
 
 export const DEFAULT_MERCHANT_SETTINGS: MerchantSettings = {
+  shopId: 'metroprint-downtown',
   storeName: 'MetroPrint Express',
   storeTagline: 'Fast, secure self-service print hub',
   address: '452 University Avenue, Suite 101, Tech District',
