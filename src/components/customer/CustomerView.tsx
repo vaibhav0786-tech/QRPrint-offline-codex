@@ -139,6 +139,7 @@ export const CustomerView: React.FC = () => {
               <QrCode className="w-3.5 h-3.5" />
               <span>Direct Self-Service Print Portal</span>
             </div>
+            <p className="font-mono text-[10px] uppercase tracking-[.16em] text-indigo-300">Shop ID · {merchantSettings.shopId}</p>
             <h1 className="text-2xl font-bold tracking-tight text-white">
               {merchantSettings.storeName}
             </h1>

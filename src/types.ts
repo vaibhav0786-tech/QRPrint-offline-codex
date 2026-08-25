@@ -133,6 +133,8 @@ export interface PricingSettings {
 }
 
 export interface MerchantSettings {
+  /** Public routing key assigned to this physical shop; never use it as a secret. */
+  shopId: string;
   storeName: string;
   storeTagline: string;
   address: string;
