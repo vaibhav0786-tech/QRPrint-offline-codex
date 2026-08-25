@@ -40,15 +40,15 @@ exit /b %EXIT_CODE%
 
 :run_cmd
 set "STEP=%~1"
-shift /1
+set "COMMAND=%~2"
 set "SAFE_STEP=%STEP: =_%"
 set "SAFE_STEP=%SAFE_STEP:/=_%"
 set "LAST_OUTPUT_FILE=%LOG_DIR%\%DATE:/=-%_%TIME::=-%_%SAFE_STEP%.log"
 set "LAST_OUTPUT_FILE=%LAST_OUTPUT_FILE: =0%"
 echo.
 echo ^>^> %STEP%
-echo Command: %* > "!LAST_OUTPUT_FILE!"
-%* >> "!LAST_OUTPUT_FILE!" 2>&1
+echo Command: !COMMAND! > "!LAST_OUTPUT_FILE!"
+cmd /d /s /c "!COMMAND!" >> "!LAST_OUTPUT_FILE!" 2>&1
 set "CMD_EXIT=!ERRORLEVEL!"
 type "!LAST_OUTPUT_FILE!"
 if not "!CMD_EXIT!"=="0" call :fail_install "%STEP%" "!CMD_EXIT!" & exit /b !CMD_EXIT!
@@ -90,11 +90,11 @@ if "%PORT%"=="" set PORT=3000
 choice /m "Do you want to add a front page to print jobs"
 if errorlevel 2 (set FRONT_PAGE=false) else (set FRONT_PAGE=true)
 
-call :run_cmd "Create data directory" cmd /c if not exist data mkdir data
+call :run_cmd "Create data directory" "if not exist data mkdir data"
 set "PROFILE_PS=$profile=[ordered]@{shopName='%SHOP_NAME%';ownerName='%OWNER_NAME%';staffNames='%STAFF_NAMES%'.Split(',').Trim();staffCount=[int]'%STAFF_COUNT%';printerCount=[int]'%PRINTER_COUNT%';defaultPrinter='%DEFAULT_PRINTER%';address='%SHOP_ADDRESS%';mobile='%MOBILE%';email='%EMAIL%';port=[int]'%PORT%';addFrontPage=[bool]::Parse('%FRONT_PAGE%')}; $profile ^| ConvertTo-Json -Depth 5 ^| Set-Content data\merchant-profile.json -Encoding UTF8"
-call :run_cmd "Write merchant profile" powershell -NoProfile -ExecutionPolicy Bypass -Command "%PROFILE_PS%"
-call :run_cmd "Install npm dependencies" npm install
-call :run_cmd "Build QRPrint Offline" npm run build
+call :run_cmd "Write merchant profile" "powershell -NoProfile -ExecutionPolicy Bypass -Command ""%PROFILE_PS%"""
+call :run_cmd "Install npm dependencies" "npm install"
+call :run_cmd "Build QRPrint Offline" "npm run build"
 
 echo.
 echo Setup complete. Merchant profile saved to data\merchant-profile.json
