@@ -5,7 +5,7 @@ QRPrint Offline is a Linux/Windows local-first print management starter for copy
 ## Quick start
 
 ```bash
-git clone [repo]
+git clone https://github.com/vaibhav0786-tech/QRPrint-offline-codex.git
 cd QRPrint-offline-codex
 npm install
 npm run dev -- --host 127.0.0.1 --port 3000
